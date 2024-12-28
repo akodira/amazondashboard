@@ -20,29 +20,34 @@ selected_month = st.sidebar.multiselect('Select Month', options=sorted(df['Order
 selected_quarter = st.sidebar.selectbox('Select Quarter', options=['Select'] + sorted(df['quarter'].unique()))
 selected_day = st.sidebar.multiselect('Select Day', options=sorted(df['Order_Day'].unique()))
 selected_season = st.sidebar.selectbox('Select Season', options=['Select'] + list(df['season'].unique()))
-selected_Category = st.sidebar.multiselect('Select Category', options=list(df['Category'].unique()))
-selected_Size = st.sidebar.multiselect('Select Size', options=list(df['Size'].unique()))
+selected_category = st.sidebar.selectbox('Select Category', options=['Select'] + list(df['Category'].unique()))
+selected_size = st.sidebar.selectbox('Select Size', options=['Select'] + list(df['Size'].unique()))
 
 
 # Start with a copy of the original data
 filtered_data = df.copy()
 
 # Apply filters based on user selections
-if selected_year != 'Select':  # 'Select' acts as a placeholder for no selection
+if selected_year != 'Select':  
     filtered_data = filtered_data[filtered_data['Order_Year'] == selected_year]
 
-if selected_month:  # Will only filter if a month is selected
+if selected_month:  
     filtered_data = filtered_data[filtered_data['Order_Month'].isin(selected_month)]
 
 if selected_quarter != 'Select':
     filtered_data = filtered_data[filtered_data['quarter'] == selected_quarter]
 
-if selected_day:  # Will only filter if a day is selected
+if selected_day:  
     filtered_data = filtered_data[filtered_data['Order_Day'].isin(selected_day)]
 
 if selected_season != 'Select':
     filtered_data = filtered_data[filtered_data['season'] == selected_season]
 
+if selected_category != 'Select':
+    filtered_data = filtered_data[filtered_data['Category']== selected_category]
+
+if selected_size != 'Select':
+    filtered_data = filtered_data[filtered_data['Size']== selected_size]
 
 
 
@@ -103,7 +108,7 @@ def page1():
                                 names='quarter', 
                                 values='Amount', 
                                 title='Total Profit by Quarter',
-                                hole=0.3,  #
+                                hole=0.3,  
                                 color_discrete_sequence=quarter_colors)
                          .update_traces(textposition='inside', textinfo='label+percent')  
                          .update_layout(title_text='Total Profit by Quarter'))
@@ -122,7 +127,6 @@ def page1():
               f"{x:,.0f}"
         )
 
-        # Create the line chart
         fig = px.line(
         data_frame=profit_by_month,
         x='Order_Month',
@@ -130,11 +134,10 @@ def page1():
         text='Formatted_Text'
         )
 
-        # Update the line chart with customizations
         fig.update_traces(
-        line=dict(color='grey'),  # Line color
-        marker=dict(size=8, color='blue'),  # Marker size and color
-        textposition='top center'  # Position the text above the markers
+        line=dict(color='grey'),  
+        marker=dict(size=8, color='blue'),  
+        textposition='top center'  
         )
 
         fig.update_layout(
@@ -144,15 +147,14 @@ def page1():
         tickmode='array',
         tickvals=profit_by_month['Order_Month'],
         ticktext=profit_by_month['Order_Month'].astype(str),
-        tickangle=-45  # Rotate labels for better readability
+        tickangle=-45  
         ),
         yaxis=dict(
-        showticklabels=False,  # Hide Y-axis labels
-        title='',  # Remove Y-axis title
+        showticklabels=False,  
+        title='',  
             )
         )
 
-        # Display the line chart
         st.plotly_chart(fig)
         
     
@@ -164,7 +166,7 @@ def page1():
         
         st.plotly_chart(px.bar(data_frame=profit_by_day_name, x='Order_Day', y='Amount', text_auto=True)
                          .update_traces(marker_color=day_colors)  
-                         .update_layout(title_text='Total Profit by Day', showlegend=False)  # Hide legend
+                         .update_layout(title_text='Total Profit by Day', showlegend=False)  
                          .update_layout(yaxis={'showticklabels': False}))
 
 def page2():
@@ -172,7 +174,7 @@ def page2():
        
     with tab1:
          # Top-selling products by quantity
-        top_quantity = df.groupby('SKU')['Qty'].sum().sort_values(ascending=False).head(10).reset_index()
+        top_quantity = filtered_data.groupby('SKU')['Qty'].sum().sort_values(ascending=False).head(10).reset_index()
 
         # Create a bar chart
         fig = px.bar(
@@ -183,7 +185,7 @@ def page2():
         title='Top 10 SKUs by Quantity',
         )
 
-        # Customize the chart
+        
         fig.update_traces(
         texttemplate='%{text}',  
         textposition='outside',  
@@ -207,9 +209,8 @@ def page2():
 
 
         # Top-selling products by revenue
-        top_revenue = df.groupby('SKU')['Amount'].sum().sort_values(ascending=False).head(10).reset_index()
+        top_revenue = filtered_data.groupby('SKU')['Amount'].sum().sort_values(ascending=False).head(10).reset_index()
 
-        # Create a bar chart
         fig = px.bar(
         data_frame=top_revenue,
         x='SKU',
@@ -218,7 +219,7 @@ def page2():
         title='Top 10 SKUs by Revenue',
         )
 
-        # Customize the chart
+
         fig.update_traces(
         texttemplate='%{text:.2s}',  
         textposition='outside',  
@@ -242,9 +243,9 @@ def page2():
 
     with tab2:
         # Top categories by quantity
-        top_qty_by_category = df.groupby('Category')['Qty'].sum().sort_values(ascending=False).reset_index()
+        top_qty_by_category = filtered_data.groupby('Category')['Qty'].sum().sort_values(ascending=False).reset_index()
 
-        # Create a bar chart
+
         fig = px.bar(
         data_frame=top_qty_by_category,
         x='Category',
@@ -253,7 +254,7 @@ def page2():
         title='Qty by Category',
         )
 
-        # Customize the chart
+        
         fig.update_traces(
         texttemplate='%{text:.2s}',  
         textposition='outside',  
@@ -273,12 +274,12 @@ def page2():
             }
         )
 
-        # Display the chart
+        
         st.plotly_chart(fig)
         
-        top_revenue_by_category = df.groupby('Category')['Amount'].sum().sort_values(ascending=False).reset_index()
+        top_revenue_by_category = filtered_data.groupby('Category')['Amount'].sum().sort_values(ascending=False).reset_index()
 
-        # Create a bar chart
+        
         fig = px.bar(
         data_frame=top_revenue_by_category,
         x='Category',
@@ -287,7 +288,6 @@ def page2():
         title='Revenue by Category',
         )
 
-        # Customize the chart
         fig.update_traces(
         texttemplate='%{text:.2s}',  
         textposition='outside',  
@@ -311,9 +311,9 @@ def page2():
 
     with tab3:
         
-        top_qty_by_size = df.groupby('Size')['Qty'].sum().sort_values(ascending=False).reset_index()
+        top_qty_by_size = filtered_data.groupby('Size')['Qty'].sum().sort_values(ascending=False).reset_index()
 
-        # Create a bar chart
+     
         fig = px.bar(
         data_frame=top_qty_by_size,
         x='Size',
@@ -323,9 +323,9 @@ def page2():
         )
 
         fig.update_traces(
-        texttemplate='%{text:.2s}',  # Format revenue (e.g., in millions if large numbers)
-        textposition='outside',  # Position text outside the bars
-        marker_color='orange'  # Set bar color to orange
+        texttemplate='%{text:.2s}', 
+        textposition='outside',  
+        marker_color='orange'  
         )
 
         fig.update_layout(
@@ -337,20 +337,20 @@ def page2():
         title='Qty'
         ),
         title={
-        'x': 0.5  # Center the chart title
+        'x': 0.5  
             }
         )
 
         st.plotly_chart(fig)
 
         
-        top_revenue_by_size = df.groupby('Size')['Amount'].sum().sort_values(ascending=False).reset_index()
+        top_revenue_by_size = filtered_data.groupby('Size')['Amount'].sum().sort_values(ascending=False).reset_index()
 
         fig = px.bar(
         data_frame=top_revenue_by_size,
         x='Size',
         y='Amount',
-        text='Amount',  # Display revenue as text on the bars
+        text='Amount',  
         title='Revenue by Size',
         )
 
@@ -377,7 +377,7 @@ def page2():
         
     with tab4:
         # Top categories by quantity
-        top_qty_by_style = df.groupby('Style')['Qty'].sum().sort_values(ascending=False).head(10).reset_index()
+        top_qty_by_style = filtered_data.groupby('Style')['Qty'].sum().sort_values(ascending=False).head(10).reset_index()
 
         
         fig = px.bar(
@@ -388,7 +388,6 @@ def page2():
         title='Top 10 Qty by Style',
         )
 
-        # Customize the chart
         fig.update_traces(
         texttemplate='%{text:.2s}',  
         textposition='outside',  
@@ -411,9 +410,9 @@ def page2():
         
         st.plotly_chart(fig)
         
-        top_revenue_by_style = df.groupby('Style')['Amount'].sum().sort_values(ascending=False).head(10).reset_index()
+        top_revenue_by_style = filtered_data.groupby('Style')['Amount'].sum().sort_values(ascending=False).head(10).reset_index()
 
-        # Create a bar chart
+        
         fig = px.bar(
         data_frame=top_revenue_by_style,
         x='Style',
@@ -421,7 +420,6 @@ def page2():
         text='Amount',  
         title='Top 10 Revenue by Style',
         )
-
         
         fig.update_traces(
         texttemplate='%{text:.2s}',  
@@ -445,7 +443,7 @@ def page2():
         st.plotly_chart(fig)
 
 def page3():
-        top10sales = df.groupby('Order_Day').sum().sort_values('Amount', ascending=False)
+        top10sales = filtered_data.groupby('Order_Day').sum().sort_values('Amount', ascending=False)
         top10sales = top10sales.reset_index().head(10)
 
         fig = px.bar(
@@ -477,7 +475,7 @@ def page3():
 
 
 
-        highqty = df.groupby('Order_Day').sum().sort_values('Qty', ascending = False)
+        highqty = filtered_data.groupby('Order_Day').sum().sort_values('Qty', ascending = False)
         highqty = highqty.reset_index().head(10)
     
         fig = px.bar(
@@ -487,10 +485,10 @@ def page3():
         title='Top 10 Days When Highest Quantity Of Items Were Sold',
         color='Qty',
         color_continuous_scale='turbo',
-        text='Qty'  # Display data labels
+        text='Qty'  
         )
         
-        # Enhance the layout of the chart
+        
         fig.update_layout(
             xaxis=dict(
                 title='Order_Day',
@@ -501,36 +499,36 @@ def page3():
                 title='Sales Quantity'
             ),
             title=dict(
-                x=0.5  # Center the title
+                x=0.5  
             ),
             margin=dict(l=40, r=40, t=60, b=40),
-            showlegend=False  # Hide legend
+            showlegend=False  
         )
         st.plotly_chart(fig)
 
 
-        grouped_df = df.groupby(['Order_Year', 'Order_Month', 'Order_Day']).sum().reset_index()
+        grouped_df = filtered_data.groupby(['Order_Year', 'Order_Month', 'Order_Day']).sum().reset_index()
 
-        # Create the Plotly scatter plot
+        
         fig = px.scatter(
             data_frame=grouped_df,
             x='Qty',
             y='Amount',
-            color='Order_Year',  # Equivalent to `hue`
-            size='Order_Year',  # Equivalent to `size`
-            symbol='Order_Year',  # Equivalent to `style`
+            color='Order_Year',  
+            size='Order_Year',  
+            symbol='Order_Year',  
             title='Sales Analysis by Quantity and Amount',
             color_discrete_sequence=px.colors.qualitative.Set2,
-            size_max=40,  # Ensure bubble sizes are within a reasonable range
+            size_max=40,  
             labels={'Qty': 'Quantity', 'Amount': 'Amount (USD)', 'Order_Year': 'Year'}
         )
         
-        # Enhance layout
+        
         fig.update_layout(
             xaxis_title='Quantity',
             yaxis_title='Amount (USD)',
             legend_title='Order Year',
-            title_x=0.5,  # Center the title
+            title_x=0.5,  
             height=600,
             margin=dict(l=40, r=40, t=60, b=40)
         )
@@ -547,33 +545,32 @@ def page3():
 
 def page4():
 
-        top10_state_counts = df['ship-state'].value_counts().head(10).reset_index()
+        top10_state_counts = filtered_data['ship-state'].value_counts().head(10).reset_index()
         top10_state_counts.columns = ['State', 'Order Count']
         
-        # Create a simple bar chart with data labels
+   
         fig = px.bar(
             top10_state_counts,
             x='State',
             y='Order Count',
-            text='Order Count',  # Show data labels
+            text='Order Count',  
             title='Top 10 States by Order Count',
             labels={'State': 'State', 'Order Count': 'Order Count'}
         )
-        
-        # Optimize the layout
+
         fig.update_layout(
             xaxis=dict(title='State', tickangle=90),
             yaxis=dict(title='Order Count'),
-            title=dict(x=0.5),  # Center the title
+            title=dict(x=0.5),  
             margin=dict(l=40, r=40, t=60, b=40)
         )
         
-        # Display the Plotly chart in Streamlit
+
         st.plotly_chart(fig, use_container_width=True)
 
 
         top10_state_qty = (
-        df.groupby('ship-state')['Qty']
+        filtered_data.groupby('ship-state')['Qty']
         .sum()
         .sort_values(ascending=False)
         .head(10)
@@ -581,25 +578,23 @@ def page4():
         )
         top10_state_qty.columns = ['State', 'Total Qty']
         
-        # Create a bar chart with data labels
+
         fig = px.bar(
             top10_state_qty,
             x='State',
             y='Total Qty',
-            text='Total Qty',  # Show data labels
+            text='Total Qty',  
             title='Top 10 States by Total Quantity',
             labels={'State': 'State', 'Total Qty': 'Total Quantity'}
         )
         
-        # Optimize the layout
         fig.update_layout(
             xaxis=dict(title='State', tickangle=90),
             yaxis=dict(title='Total Quantity'),
-            title=dict(x=0.5),  # Center the title
+            title=dict(x=0.5),  
             margin=dict(l=40, r=40, t=60, b=40)
         )
-        
-        # Display the Plotly chart in Streamlit
+
         st.plotly_chart(fig)
 
 
@@ -611,26 +606,23 @@ def page4():
         .reset_index()
         )
         top10_state_amount.columns = ['State', 'Total Amount']
-        
-        # Create a bar chart with data labels
+
         fig = px.bar(
             top10_state_amount,
             x='State',
             y='Total Amount',
-            text='Total Amount',  # Show data labels
+            text='Total Amount',  
             title='Top 10 States by Total Amount',
             labels={'State': 'State', 'Total Amount': 'Total Amount'}
         )
-        
-        # Optimize the layout
+
         fig.update_layout(
             xaxis=dict(title='State', tickangle=90),
             yaxis=dict(title='Total Amount'),
-            title=dict(x=0.5),  # Center the title
+            title=dict(x=0.5), 
             margin=dict(l=40, r=40, t=60, b=40)
         )
-        
-        # Display the Plotly chart in Streamlit
+
         st.plotly_chart(fig, use_container_width=True)
     
 pgs = {
